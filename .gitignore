@@ -1,0 +1,16 @@
+node_modules
+dist
+coverage
+playwright-report
+test-results
+/artifacts/local-visual/
+*.local
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+.DS_Store
+
+# Supabase CLI local state
+supabase/.temp
+supabase/.branches
