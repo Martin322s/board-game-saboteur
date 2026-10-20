@@ -1,0 +1,30 @@
+{
+  // Portability gate for src/domain (ARCHITECTURE.md §3.3).
+  // No DOM lib and no ambient @types: any use of window, document, fetch, crypto,
+  // console, timers, process or Deno is a type error here. The same files must run
+  // unchanged in the browser (UX previews) and in Supabase Edge Functions (authoritative).
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "types": [],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "skipLibCheck": false,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "erasableSyntaxOnly": true
+  },
+  "include": ["src/domain/**/*.ts"],
+  "exclude": ["src/domain/**/*.test.ts"]
+}

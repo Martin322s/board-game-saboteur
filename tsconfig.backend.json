@@ -1,0 +1,27 @@
+{
+  // Typecheck for host-neutral backend code (supabase/functions/_shared/game) and its tests.
+  // The Deno entry points (supabase/functions/*/index.ts) use Deno globals and npm: specifiers
+  // and are checked with `deno check` where Deno is available.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "erasableSyntaxOnly": true
+  },
+  "include": ["supabase/functions/_shared/game/**/*.ts", "tests/integration/**/*.ts"]
+}
