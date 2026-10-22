@@ -1,0 +1,92 @@
+@import 'tailwindcss';
+
+/* Original blue-gray rock/mine palette. Gold is a small accent, never a surface. */
+@theme {
+  --color-surface: #293b49;
+  --color-surface-raised: #354d60;
+  --color-border: #607e92;
+  --color-fg: #edf2f5;
+  --color-fg-muted: #bacbd6;
+  --color-accent: #a8c9db;
+  --color-focus: #a8dce8;
+  --color-gold: #e6bf5c;
+  --color-stone: #4a6474;
+  --color-stone-light: #7693a1;
+  --color-positive: #8dd0a7;
+  --color-damage: #ff9a9e;
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: var(--color-surface);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+}
+
+body {
+  min-height: 100dvh;
+}
+
+/* Visible keyboard focus everywhere; never removed without a replacement. */
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---- Game: cold stone playing surface and muted blue panels, drawn in code ---- */
+.mine-bg {
+  background-color: #4e6573;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgb(166 191 206 / 0.22), transparent 65%),
+    radial-gradient(ellipse at 85% 100%, rgb(30 49 65 / 0.4), transparent 60%);
+}
+.mine-panel {
+  background-image: linear-gradient(180deg, #354d60 0%, #293e50 100%);
+  border-color: #607e92;
+}
+.game-card {
+  background: linear-gradient(180deg, #cfdae1, #a7bbc8);
+  color: #203442;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+.game-card[aria-pressed='true'] {
+  transform: translateY(-10px);
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px rgb(168 220 232 / 0.45), 0 8px 14px rgb(19 35 47 / 0.3);
+}
+.legal-cell {
+  animation: legal-breathe 2.4s ease-in-out infinite;
+}
+@keyframes legal-breathe {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+/* Reduced-motion foundation: later animations must also check this preference. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
