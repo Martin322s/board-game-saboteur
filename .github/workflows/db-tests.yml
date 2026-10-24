@@ -1,0 +1,30 @@
+# Targeted database/security tests (TEST_STRATEGY Tier C "test:db").
+# Isolated from the fast frontend/unit workflow: runs only when SQL changes, or on demand.
+name: db-tests
+
+on:
+  pull_request:
+    paths: ['supabase/**']
+  push:
+    branches: [main]
+    paths: ['supabase/**']
+  workflow_dispatch:
+
+concurrency:
+  group: db-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pgtap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      # Only the services the lobby tests need (Postgres, Auth, Realtime).
+      - run: supabase start -x studio,imgproxy,storage-api,edge-runtime,logflare,vector,supavisor,postgres-meta,mailpit,kong
+      - run: supabase test db
+      - if: always()
+        run: supabase stop --no-backup
