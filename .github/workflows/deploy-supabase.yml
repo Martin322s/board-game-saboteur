@@ -1,0 +1,84 @@
+# Deploys the backend to the hosted Supabase project with the official Supabase CLI.
+# Manual only (workflow_dispatch); never runs on push.
+#
+# Required repository/environment configuration (Settings → Secrets and variables → Actions):
+#   secrets.SUPABASE_ACCESS_TOKEN      personal access token (supabase.com → Account → Access Tokens)
+#   secrets.SUPABASE_DB_PASSWORD       database password of the project
+#   vars.SUPABASE_PROJECT_REF          project ref (the subdomain of the project URL)
+#   vars.SUPABASE_PUBLISHABLE_KEY      public publishable key (used only by the smoke test)
+#   vars.ALLOWED_ORIGINS               comma-separated frontend origins for game-command CORS
+name: deploy-supabase
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_database:
+        description: Apply pending migrations (supabase db push)
+        type: boolean
+        default: true
+      deploy_function:
+        description: Deploy game-command and set ALLOWED_ORIGINS
+        type: boolean
+        default: true
+
+concurrency:
+  group: deploy-supabase
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check required configuration (values are never printed)
+        run: |
+          missing=0
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_PROJECT_REF; do
+            if [ -z "${!name}" ]; then echo "::error::$name is not configured"; missing=1; fi
+          done
+          exit $missing
+
+      - name: Edge domain copy must match src/domain
+        run: node scripts/domain-sync.mjs check
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Show migration status
+        run: supabase migration list --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Apply migrations
+        if: inputs.deploy_database
+        run: supabase db push --password "$SUPABASE_DB_PASSWORD"
+
+      - name: Set game-command ALLOWED_ORIGINS
+        if: inputs.deploy_function && vars.ALLOWED_ORIGINS != ''
+        run: supabase secrets set "ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}" --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Deploy game-command
+        if: inputs.deploy_function
+        run: supabase functions deploy game-command --project-ref "$SUPABASE_PROJECT_REF"
+
+      - name: Hosted smoke test (public configuration only)
+        if: vars.SUPABASE_PUBLISHABLE_KEY != ''
+        env:
+          SUPABASE_URL: https://${{ vars.SUPABASE_PROJECT_REF }}.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          export ALLOWED_ORIGIN="$(printf '%s' '${{ vars.ALLOWED_ORIGINS }}' | cut -d, -f1)"
+          node scripts/smoke-hosted.mjs
